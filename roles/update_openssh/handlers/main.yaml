@@ -1,0 +1,75 @@
+---
+- name: create /root/openssh directory
+  file:
+    path: /root/openssh/backup
+    state: directory
+  listen: service is running, installing
+
+- name: backup openssh and openssl
+  command: 
+    cmd: mv /usr/local/{{ item }} /root/openssh/backup/{{ item }}_{{ currnet_time }}.bak
+    removes: /usr/local/{{ item }}
+  loop:
+  - openssh
+  - openssl
+  listen: service is running, installing
+
+- name: unarchive openssh.tar.gz and openssl.tar.gz to dest
+  unarchive: 
+    src: "{{ item }}"
+    dest: /usr/local
+  loop:
+  - "{{ open_ssh_package }}"
+  - "{{ open_ssl_package }}"
+  listen: service is running, installing
+
+- name: execute command 1
+  shell: |
+    mv /usr/sbin/sshd /root/openssh/backup/sshd_{{ currnet_time }}.bak
+    cp /usr/local/openssh/sbin/sshd /usr/sbin
+    echo "/usr/local/openssl/lib" >> /etc/ld.so.conf.d/openssl.conf
+    ldconfig
+    chmod 0600 /etc/ssh/ssh_host_rsa_key
+    chmod 0600 /etc/ssh/ssh_host_ecdsa_key
+    chmod 0600 /etc/ssh/ssh_host_ed25519_key
+    sed -i '/^GSSAPI.*/s/^/#/' /etc/ssh/sshd_config
+  listen: service is running, installing
+
+- name: stop sshd.service
+  service:
+    name: sshd
+    state: stopped
+  listen: service is running, installing
+
+- name: execute command 2
+  shell: |
+    mv /lib/systemd/system/sshd.service /root/openssh/backup/sshd.service_{{ currnet_time }}.bak
+    sshd -T | grep kexalgorithms >> /etc/ssh/sshd_config
+    systemctl daemon-reload
+  listen: service is running, installing
+
+- name: backup sshd file
+  command:
+    cmd: mv /etc/init.d/sshd /root/openssh/backup/sshd.init_{{ currnet_time }}.bak
+    removes: /etc/init.d/sshd
+  listen: service is running, installing
+
+- name: copy sshd.init to dest
+  copy: 
+    src: "{{ sshd_init }}"
+    dest: /etc/init.d/sshd
+  listen: service is running, installing
+  
+- name: execute command  3
+  shell: |
+    chmod 755 /etc/init.d/sshd
+    /etc/init.d/sshd restart
+    systemctl daemon-reload
+  listen: service is running, installing
+
+- name: restart sshd service
+  service: 
+    name: sshd
+    state: restarted
+  listen: service is running, installing
+  

@@ -1,0 +1,14 @@
+- name: check openssh version
+  shell:
+    cmd: source ~/.bash_profile; sshd -V
+  register: sshd_version_output
+  changed_when: false
+  tags:
+    - check version
+
+- name: print sshd version 
+  debug: 
+    msg: "sshd version: {{ sshd_version_output.stderr }}"
+  when: sshd_version_output.rc == 0
+  tags:
+    - check version
