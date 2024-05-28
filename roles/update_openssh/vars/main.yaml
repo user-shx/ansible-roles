@@ -1,0 +1,4 @@
+open_ssh_package: ./files/openssh.tar.gz
+open_ssl_package: ./files/openssl.tar.gz
+sshd_init: ./files/sshd.init
+currnet_time: '20240412'

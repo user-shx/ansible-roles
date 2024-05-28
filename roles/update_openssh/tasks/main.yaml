@@ -1,0 +1,5 @@
+---
+# - import_tasks: common.yaml
+- import_tasks: check_distribution.yaml
+- import_tasks: install.yaml
+- import_tasks: check_version.yaml

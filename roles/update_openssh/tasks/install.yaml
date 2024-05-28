@@ -1,0 +1,45 @@
+---
+- name: install telnet and xinetd service
+  yum: 
+    name: ['telnet','telnet-server', 'xinetd']
+    state: present
+  tags:
+    - update openssh
+
+- name: start xinetd service
+  service: 
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+  - xinetd
+  tags:
+    - update openssh
+
+- name: create telnet config
+  copy:
+    content: |
+      service telnet
+      {
+      disable = no
+      flags = REUSE
+      socket_type = stream
+      wait = no
+      user = root
+      server = /usr/sbin/in.telnetd
+      log_on_failure += USERID
+      }
+    dest: /etc/xinetd.d/telnet
+    owner: root
+    mode: 644
+  tags:
+    - update openssh
+
+- name: restart xinetd service
+  service: 
+    name: xinetd
+    state: restarted
+  notify: 
+  - service is running, installing
+  tags:
+    - update openssh

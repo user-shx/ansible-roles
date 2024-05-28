@@ -1,0 +1,8 @@
+---
+- name: openssh upgraded to 9.7_p1
+  hosts: ali
+  become: yes
+  become_user: root
+  gather_facts: yes
+  roles:
+  - ../roles/update_openssh
